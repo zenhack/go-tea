@@ -21,10 +21,10 @@ type ModifyPatch struct {
 	AddAttrs    map[string]string
 	RemoveAttrs []string
 	Events      map[string]EventHandler
-	Kids        KidsPatch
+	Children    []ChildPatch
 }
 
-type KidsPatch struct {
+type ChildPatch struct {
 	Key   string
 	Patch Patch
 }
