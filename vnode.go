@@ -8,7 +8,7 @@ type VNode interface {
 type VElem struct {
 	Tag      string
 	Attrs    map[string]string
-	Events   EventHandler
+	Events   map[string]EventHandler
 	Children []Child
 }
 
@@ -19,7 +19,7 @@ type Child struct {
 
 type VText string
 
-type EventHandler = func(Event)
+type EventHandler = func(Event) any
 
 func (ve *VElem) Diff(other VNode) Patch {
 	otherElem, ok := other.(*VElem)

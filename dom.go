@@ -24,7 +24,11 @@ func (ve VElem) ToDomNode() DomNode {
 			eAttrs.Call("setNamedItem", attr)
 		}
 	}
-	// TODO: event handlers
+	for k, h := range ve.Events {
+		e.Call("addEventListener", k, js.FuncOf(func(this js.Value, args []js.Value) any {
+			return h(Event{Value: args[0]})
+		}))
+	}
 	for _, kid := range ve.Children {
 		e.Call("appendChild", kid.Node.ToDomNode().Value)
 	}
