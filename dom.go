@@ -30,7 +30,7 @@ func (ve VElem) ToDomNode() DomNode {
 		}))
 	}
 	for _, kid := range ve.Children {
-		e.Call("appendChild", kid.Node.ToDomNode().Value)
+		e.Call("appendChild", kid.ToDomNode().Value)
 	}
 	return DomNode{Value: e}
 }

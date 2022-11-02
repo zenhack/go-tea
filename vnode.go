@@ -9,12 +9,7 @@ type VElem struct {
 	Tag      string
 	Attrs    map[string]string
 	Events   map[string]EventHandler
-	Children []Child
-}
-
-type Child struct {
-	Key  string
-	Node VNode
+	Children []VNode
 }
 
 type VText string
