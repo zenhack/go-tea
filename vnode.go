@@ -28,21 +28,52 @@ func (ve *VElem) Diff(dst VNode) Patch {
 		return ReplacePatch{Replacement: dst}
 	}
 
-	patch := ModifyPatch{}
-	for k, _ := range ve.Attrs {
-		if _, ok := dstElem.Attrs[k]; !ok {
-			patch.RemoveAttrs = append(patch.RemoveAttrs, k)
+	return ModifyPatch{
+		Attrs:    diffAttrs(ve.Attrs, dstElem.Attrs),
+		Events:   diffEvents(ve.Events, dstElem.Events),
+		Children: diffChildren(ve.Children, dstElem.Children),
+	}
+}
+
+func diffAttrs(src, dst map[string]string) AttrsPatch {
+	var patch AttrsPatch
+	for k, _ := range src {
+		if _, ok := dst[k]; !ok {
+			patch.Remove = append(patch.Remove, k)
 		}
 	}
-	patch.AddAttrs = make(map[string]string)
-	for k, v := range dstElem.Attrs {
-		oldV := ve.Attrs[k]
+	patch.Add = make(map[string]string)
+	for k, v := range dst {
+		oldV := src[k]
 		if v != oldV {
-			patch.AddAttrs[k] = v
+			patch.Add[k] = v
 		}
 	}
+	return patch
+}
+
+func diffEvents(src, dst map[string]EventHandler) EventsPatch {
 	// TODO: events
-	// TODO: kids
+	panic("TODO")
+}
+
+func diffChildren(src, dst []VNode) ChildPatch {
+	var patch ChildPatch
+
+	minLen := len(src)
+	if len(dst) < minLen {
+		minLen = len(dst)
+	}
+
+	for i := 0; i < minLen; i++ {
+		patch.Common = append(patch.Common, src[i].Diff(dst[i]))
+	}
+
+	patch.Append = dst[minLen:]
+	if len(src) > minLen {
+		patch.Drop = len(src) - minLen
+	}
+
 	return patch
 }
 

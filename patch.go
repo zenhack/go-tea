@@ -18,13 +18,22 @@ func (p ReplacePatch) Patch(n *DomNode) {
 }
 
 type ModifyPatch struct {
-	AddAttrs    map[string]string
-	RemoveAttrs []string
-	Events      map[string]EventHandler
-	Children    []ChildPatch
+	Attrs    AttrsPatch
+	Events   EventsPatch
+	Children ChildPatch
+}
+
+type EventsPatch struct {
+	Events map[string]EventHandler
+}
+
+type AttrsPatch struct {
+	Add    map[string]string
+	Remove []string
 }
 
 type ChildPatch struct {
-	Key   string
-	Patch Patch
+	Common []Patch
+	Drop   int
+	Append []VNode
 }
