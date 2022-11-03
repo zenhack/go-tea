@@ -59,6 +59,32 @@ func (vt VText) ToDomNode() DomNode {
 	return DomNode{Value: document.Call("createTextNode", string(vt))}
 }
 
-func (ModifyPatch) Patch(n *DomNode) {
-	panic("TODO")
+func (p ModifyPatch) Patch(n *DomNode) {
+	p.Attrs.patch(n)
+	p.Events.patch(n)
+	p.Children.patch(n)
+}
+
+func (AttrsPatch) patch(n *DomNode) {
+}
+
+func (EventsPatch) patch(n *DomNode) {
+}
+
+func (cp ChildPatch) patch(n *DomNode) {
+	for i, p := range cp.Common {
+		oldValue := n.Value.Get("children").Index(i)
+		childNode := DomNode{Value: oldValue}
+		p.Patch(&childNode)
+		if !childNode.Value.Equal(oldValue) {
+			n.Value.Call("replaceChild", childNode.Value, oldValue)
+		}
+	}
+	for i := len(cp.Common); i < cp.Drop; i++ {
+		child := n.Value.Get("children").Index(i)
+		n.Value.Call("removeChild", child)
+	}
+	for _, child := range cp.Append {
+		n.appendChild(child.ToDomNode())
+	}
 }
