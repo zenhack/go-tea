@@ -1,7 +1,7 @@
 package vdom
 
 type VNode interface {
-	Diff(other VNode) Patch
+	Diff(dst VNode) Patch
 	ToDomNode() DomNode
 }
 
@@ -16,26 +16,26 @@ type VText string
 
 type EventHandler = func(Event) any
 
-func (ve *VElem) Diff(other VNode) Patch {
-	otherElem, ok := other.(*VElem)
+func (ve *VElem) Diff(dst VNode) Patch {
+	dstElem, ok := dst.(*VElem)
 	if !ok {
-		return ReplacePatch{Replacement: other}
+		return ReplacePatch{Replacement: dst}
 	}
-	if ve == otherElem {
+	if ve == dstElem {
 		return NopPatch{}
 	}
-	if ve.Tag != otherElem.Tag {
-		return ReplacePatch{Replacement: other}
+	if ve.Tag != dstElem.Tag {
+		return ReplacePatch{Replacement: dst}
 	}
 
 	patch := ModifyPatch{}
 	for k, _ := range ve.Attrs {
-		if _, ok := otherElem.Attrs[k]; !ok {
+		if _, ok := dstElem.Attrs[k]; !ok {
 			patch.RemoveAttrs = append(patch.RemoveAttrs, k)
 		}
 	}
 	patch.AddAttrs = make(map[string]string)
-	for k, v := range otherElem.Attrs {
+	for k, v := range dstElem.Attrs {
 		oldV := ve.Attrs[k]
 		if v != oldV {
 			patch.AddAttrs[k] = v
@@ -46,10 +46,10 @@ func (ve *VElem) Diff(other VNode) Patch {
 	return patch
 }
 
-func (vt VText) Diff(other VNode) Patch {
-	otherText, ok := other.(VText)
-	if ok && otherText == vt {
+func (vt VText) Diff(dst VNode) Patch {
+	dstText, ok := dst.(VText)
+	if ok && dstText == vt {
 		return NopPatch{}
 	}
-	return ReplacePatch{Replacement: other}
+	return ReplacePatch{Replacement: dst}
 }
