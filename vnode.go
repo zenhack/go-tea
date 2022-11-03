@@ -14,7 +14,8 @@ type VElem struct {
 
 type VText string
 
-type EventHandler = func(Event) any
+// N.B. the pointer indirection is so these can be compared.
+type EventHandler = *func(Event) any
 
 func (ve *VElem) Diff(dst VNode) Patch {
 	dstElem, ok := dst.(*VElem)
@@ -53,8 +54,24 @@ func diffAttrs(src, dst map[string]string) AttrsPatch {
 }
 
 func diffEvents(src, dst map[string]EventHandler) EventsPatch {
-	// TODO: events
-	panic("TODO")
+	var patch EventsPatch
+	for k := range src {
+		if _, ok := dst[k]; !ok {
+			patch.Remove = append(patch.Remove, k)
+		}
+	}
+
+	for k := range dst {
+		if src[k] == dst[k] {
+			continue
+		}
+		if _, ok := src[k]; ok {
+			patch.Remove = append(patch.Remove, k)
+		}
+		patch.Add[k] = dst[k]
+	}
+
+	return patch
 }
 
 func diffChildren(src, dst []VNode) ChildPatch {

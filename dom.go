@@ -26,7 +26,7 @@ func (ve VElem) ToDomNode() DomNode {
 	}
 	for k, h := range ve.Events {
 		e.Call("addEventListener", k, js.FuncOf(func(this js.Value, args []js.Value) any {
-			return h(Event{Value: args[0]})
+			return (*h)(Event{Value: args[0]})
 		}))
 	}
 	for _, kid := range ve.Children {

@@ -24,7 +24,8 @@ type ModifyPatch struct {
 }
 
 type EventsPatch struct {
-	Events map[string]EventHandler
+	Add    map[string]EventHandler
+	Remove []string
 }
 
 type AttrsPatch struct {
