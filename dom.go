@@ -10,29 +10,49 @@ type DomNode struct {
 	Value js.Value
 }
 
+type attributes struct {
+	Value js.Value
+}
+
+func (a attributes) setNamed(k, v string) {
+	attr := document.Call("createAttribute", k)
+	attr.Set("value", v)
+	a.Value.Call("setNamedItem", attr)
+}
+
+func (n DomNode) attributes() attributes {
+	return attributes{Value: n.Value.Get("attributes")}
+}
+
+func (n DomNode) appendChild(child DomNode) {
+	n.Value.Call("appendChild", child.Value)
+}
+
+func (n DomNode) addEventListener(name string, h EventHandler) {
+	n.Value.Call("addEventListener", name, js.FuncOf(func(this js.Value, args []js.Value) any {
+		return (*h)(Event{Value: args[0]})
+	}))
+}
+
 type Event struct {
 	Value js.Value
 }
 
 func (ve VElem) ToDomNode() DomNode {
-	e := document.Call("createElement", ve.Tag)
+	n := DomNode{Value: document.Call("createElement", ve.Tag)}
 	if ve.Attrs != nil {
-		eAttrs := e.Get("attributes")
+		attrs := n.attributes()
 		for k, v := range ve.Attrs {
-			attr := document.Call("createAttribute", k)
-			attr.Set("value", v)
-			eAttrs.Call("setNamedItem", attr)
+			attrs.setNamed(k, v)
 		}
 	}
 	for k, h := range ve.Events {
-		e.Call("addEventListener", k, js.FuncOf(func(this js.Value, args []js.Value) any {
-			return (*h)(Event{Value: args[0]})
-		}))
+		n.addEventListener(k, h)
 	}
 	for _, kid := range ve.Children {
-		e.Call("appendChild", kid.ToDomNode().Value)
+		n.appendChild(kid.ToDomNode())
 	}
-	return DomNode{Value: e}
+	return n
 }
 
 func (vt VText) ToDomNode() DomNode {
