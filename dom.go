@@ -88,3 +88,58 @@ func (cp ChildPatch) patch(n *DomNode) {
 		n.appendChild(child.ToDomNode())
 	}
 }
+
+// An Updater manages updates to a dom node; create one with
+// NewUpdater(), send updated VNode values with Update(), and shut
+// it down with Close().
+//
+// The zero value is not meaningful.
+type Updater struct {
+	// Channel on which updates are sent. close this to shut
+	// down the goroutine managing updates.
+	updates chan VNode
+}
+
+// Close shuts down the updater.
+func (up Updater) Close() error {
+	close(up.updates)
+	return nil
+}
+
+// Update updates the value of the node. The update will happen asynchronously,
+// and multiple rapid updates may be coalesced.
+func (up Updater) Update(vnode VNode) {
+	up.updates <- vnode
+}
+
+// Create an Updater managing updates to the node, and return a handle to it.
+func NewUpdater(node DomNode) Updater {
+	updates := make(chan VNode)
+	go func() {
+		parent := node.Value.Get("parentNode")
+		var (
+			patch    Patch
+			oldVNode VNode
+		)
+
+		for {
+			// TODO(perf): use window.requestAnimationFrame to reduce
+			// unnecessary updates.
+			vnode, ok := <-updates
+			if !ok {
+				return
+			}
+			if oldVNode == nil {
+				patch = ReplacePatch{Replacement: vnode}
+			} else {
+				patch = oldVNode.Diff(vnode)
+			}
+			oldNode := node
+			patch.Patch(&node)
+			if !node.Value.Equal(oldNode.Value) {
+				parent.Call("replaceChild", node.Value, oldNode.Value)
+			}
+		}
+	}()
+	return Updater{updates: updates}
+}
