@@ -18,5 +18,10 @@ func (vt VText) ToDomNode() DomNode {
 	return DomNode{Value: vt}
 }
 
-func (ModifyPatch) Patch(*DomNode) {
+func (ModifyPatch) Patch(p, n DomNode) DomNode {
+	return n
+}
+
+func (p ReplacePatch) Patch(p, n DomNode) DomNode {
+	return p.Replacement.ToDomNode()
 }

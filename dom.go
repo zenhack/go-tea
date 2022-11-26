@@ -2,7 +2,9 @@
 
 package vdom
 
-import "syscall/js"
+import (
+	"syscall/js"
+)
 
 var document = js.Global().Get("document")
 
@@ -59,29 +61,33 @@ func (vt VText) ToDomNode() DomNode {
 	return DomNode{Value: document.Call("createTextNode", string(vt))}
 }
 
-func (p ModifyPatch) Patch(n *DomNode) {
-	p.Attrs.patch(n)
-	p.Events.patch(n)
-	p.Children.patch(n)
+func (p ReplacePatch) Patch(parent, orig DomNode) DomNode {
+	newNode := p.Replacement.ToDomNode()
+	parent.Value.Call("replaceChild", newNode.Value, orig.Value)
+	return newNode
 }
 
-func (AttrsPatch) patch(n *DomNode) {
+func (p ModifyPatch) Patch(parent, orig DomNode) DomNode {
+	p.Attrs.patch(orig)
+	p.Events.patch(orig)
+	p.Children.patch(orig)
+	return orig
 }
 
-func (EventsPatch) patch(n *DomNode) {
+func (AttrsPatch) patch(n DomNode) {
 }
 
-func (cp ChildPatch) patch(n *DomNode) {
+func (EventsPatch) patch(n DomNode) {
+}
+
+func (cp ChildPatch) patch(n DomNode) {
 	for i, p := range cp.Common {
-		oldValue := n.Value.Get("children").Index(i)
+		oldValue := n.Value.Get("childNodes").Index(i)
 		childNode := DomNode{Value: oldValue}
-		p.Patch(&childNode)
-		if !childNode.Value.Equal(oldValue) {
-			n.Value.Call("replaceChild", childNode.Value, oldValue)
-		}
+		p.Patch(n, childNode)
 	}
 	for i := len(cp.Common); i < cp.Drop; i++ {
-		child := n.Value.Get("children").Index(i)
+		child := n.Value.Get("childNodes").Index(i)
 		n.Value.Call("removeChild", child)
 	}
 	for _, child := range cp.Append {
@@ -121,7 +127,7 @@ func NewUpdater(node DomNode) Updater {
 		done:    make(chan struct{}),
 	}
 	go func() {
-		parent := node.Value.Get("parentNode")
+		parent := DomNode{Value: node.Value.Get("parentNode")}
 		var (
 			vnode, oldVNode VNode
 			animationFrame  struct {
@@ -153,11 +159,7 @@ func NewUpdater(node DomNode) Updater {
 				} else {
 					patch = oldVNode.Diff(vnode)
 				}
-				oldNode := node
-				patch.Patch(&node)
-				if !node.Value.Equal(oldNode.Value) {
-					parent.Call("replaceChild", node.Value, oldNode.Value)
-				}
+				node = patch.Patch(parent, node)
 				oldVNode = vnode
 			}
 		}
