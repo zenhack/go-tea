@@ -95,14 +95,16 @@ func (cp ChildPatch) patch(n *DomNode) {
 //
 // The zero value is not meaningful.
 type Updater struct {
-	// Channel on which updates are sent. close this to shut
-	// down the goroutine managing updates.
+	// Channel on which updates are sent.
 	updates chan VNode
+
+	// Close this to shut down the goroutine managing updates.
+	done chan struct{}
 }
 
 // Close shuts down the updater.
 func (up Updater) Close() error {
-	close(up.updates)
+	close(up.done)
 	return nil
 }
 
@@ -114,32 +116,51 @@ func (up Updater) Update(vnode VNode) {
 
 // Create an Updater managing updates to the node, and return a handle to it.
 func NewUpdater(node DomNode) Updater {
-	updates := make(chan VNode)
+	up := Updater{
+		updates: make(chan VNode),
+		done:    make(chan struct{}),
+	}
 	go func() {
 		parent := node.Value.Get("parentNode")
 		var (
-			patch    Patch
-			oldVNode VNode
+			vnode, oldVNode VNode
+			animationFrame  struct {
+				ch        chan struct{}
+				requested bool
+			}
 		)
+		animationFrame.ch = make(chan struct{}, 1)
 
 		for {
-			// TODO(perf): use window.requestAnimationFrame to reduce
-			// unnecessary updates.
-			vnode, ok := <-updates
-			if !ok {
+			select {
+			case <-up.done:
 				return
-			}
-			if oldVNode == nil {
-				patch = ReplacePatch{Replacement: vnode}
-			} else {
-				patch = oldVNode.Diff(vnode)
-			}
-			oldNode := node
-			patch.Patch(&node)
-			if !node.Value.Equal(oldNode.Value) {
-				parent.Call("replaceChild", node.Value, oldNode.Value)
+			case vnode = <-up.updates:
+				if animationFrame.requested {
+					continue
+				}
+				animationFrame.requested = true
+				js.Global().Get("window").Call("requestAnimationFrame",
+					js.FuncOf(func(this js.Value, args []js.Value) any {
+						animationFrame.ch <- struct{}{}
+						return nil
+					}))
+			case <-animationFrame.ch:
+				animationFrame.requested = false
+				var patch Patch
+				if oldVNode == nil {
+					patch = ReplacePatch{Replacement: vnode}
+				} else {
+					patch = oldVNode.Diff(vnode)
+				}
+				oldNode := node
+				patch.Patch(&node)
+				if !node.Value.Equal(oldNode.Value) {
+					parent.Call("replaceChild", node.Value, oldNode.Value)
+				}
+				oldVNode = vnode
 			}
 		}
 	}()
-	return Updater{updates: updates}
+	return up
 }
