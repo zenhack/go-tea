@@ -61,6 +61,7 @@ func diffEvents(src, dst map[string]EventHandler) EventsPatch {
 		}
 	}
 
+	patch.Add = make(map[string]EventHandler)
 	for k := range dst {
 		if src[k] == dst[k] {
 			continue
