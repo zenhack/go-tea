@@ -79,7 +79,9 @@ func (p AttrsPatch) patch(n DomNode) {
 	for k, v := range p.Add {
 		attrs.setNamed(k, v)
 	}
-	// TODO: p.Remove
+	for _, name := range p.Remove {
+		n.Value.Call("removeAttribute", name)
+	}
 }
 
 func (EventsPatch) patch(n DomNode) {
