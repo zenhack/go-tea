@@ -74,7 +74,12 @@ func (p ModifyPatch) Patch(parent, orig DomNode) DomNode {
 	return orig
 }
 
-func (AttrsPatch) patch(n DomNode) {
+func (p AttrsPatch) patch(n DomNode) {
+	attrs := n.attributes()
+	for k, v := range p.Add {
+		attrs.setNamed(k, v)
+	}
+	// TODO: p.Remove
 }
 
 func (EventsPatch) patch(n DomNode) {
