@@ -22,6 +22,6 @@ func (ModifyPatch) Patch(p, n DomNode) DomNode {
 	return n
 }
 
-func (p ReplacePatch) Patch(p, n DomNode) DomNode {
+func (p ReplacePatch) Patch(parent, n DomNode) DomNode {
 	return p.Replacement.ToDomNode()
 }
