@@ -30,10 +30,16 @@ func (n DomNode) appendChild(child DomNode) {
 	n.Value.Call("appendChild", child.Value)
 }
 
-func (n DomNode) addEventListener(name string, h EventHandler) {
-	n.Value.Call("addEventListener", name, js.FuncOf(func(this js.Value, args []js.Value) any {
+func (n DomNode) setEventListener(name string, h EventHandler) {
+	n.Value.Set("on"+name, js.FuncOf(func(this js.Value, args []js.Value) any {
 		return (*h)(Event{Value: args[0]})
 	}))
+}
+
+func (n DomNode) clearEventListener(name string) {
+	v := n.Value.Get("on" + name)
+	n.Value.Set("on"+name, js.Undefined())
+	js.Func{Value: v}.Release()
 }
 
 type Event struct {
@@ -49,7 +55,7 @@ func (ve VElem) ToDomNode() DomNode {
 		}
 	}
 	for k, h := range ve.Events {
-		n.addEventListener(k, h)
+		n.setEventListener(k, h)
 	}
 	for _, kid := range ve.Children {
 		n.appendChild(kid.ToDomNode())
@@ -84,7 +90,13 @@ func (p AttrsPatch) patch(n DomNode) {
 	}
 }
 
-func (EventsPatch) patch(n DomNode) {
+func (p EventsPatch) patch(n DomNode) {
+	for _, v := range p.Remove {
+		n.clearEventListener(v)
+	}
+	for k, v := range p.Add {
+		n.setEventListener(k, v)
+	}
 }
 
 func (cp ChildPatch) patch(n DomNode) {
