@@ -105,8 +105,10 @@ func (cp ChildPatch) patch(n DomNode) {
 		childNode := DomNode{Value: oldValue}
 		p.Patch(n, childNode)
 	}
-	for i := len(cp.Common); i < cp.Drop; i++ {
-		child := n.Value.Get("childNodes").Index(i)
+	firstDelete := len(cp.Common)
+	for i := firstDelete; i < cp.Drop; i++ {
+		child := n.Value.Get("childNodes").Index(firstDelete)
+		js.Global().Get("console").Call("log", child)
 		n.Value.Call("removeChild", child)
 	}
 	for _, child := range cp.Append {
