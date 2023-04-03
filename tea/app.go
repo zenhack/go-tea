@@ -12,12 +12,33 @@ type Message[Model any] interface {
 }
 
 type AppModel[Model any] interface {
-	View(func(Message[Model]) vdom.EventHandler) vdom.VNode
+	View(MessageSender[Model]) vdom.VNode
 }
 
 type App[M AppModel[M]] struct {
 	model M
 	msgs  chan Message[M]
+}
+
+type MessageSender[Model any] interface {
+	Send(Message[Model])
+	Event(Message[Model]) vdom.EventHandler
+}
+
+type messageSender[M AppModel[M]] struct {
+	app *App[M]
+}
+
+func (ms messageSender[Model]) Send(msg Message[Model]) {
+	ms.app.SendMessage(msg)
+}
+
+func (ms messageSender[Model]) Event(msg Message[Model]) vdom.EventHandler {
+	ret := func(vdom.Event) any {
+		ms.app.SendMessage(msg)
+		return nil
+	}
+	return &ret
 }
 
 func NewApp[M AppModel[M]](model M) *App[M] {
@@ -40,21 +61,15 @@ func (app *App[Model]) Run(ctx context.Context, node vdom.DomNode) {
 	}
 	animationFrame.ch = make(chan struct{}, 1)
 
-	msgEvent := func(msg Message[Model]) vdom.EventHandler {
-		ret := func(vdom.Event) any {
-			app.SendMessage(msg)
-			return nil
-		}
-		return &ret
-	}
-
 	onRequestAnimationFrame := js.FuncOf(func(this js.Value, args []js.Value) any {
 		animationFrame.ch <- struct{}{}
 		return nil
 	})
 	defer onRequestAnimationFrame.Release()
 
-	vnode := model.View(msgEvent)
+	ms := messageSender[Model]{app: app}
+
+	vnode := model.View(ms)
 	oldVNode := vnode
 	node = vdom.ReplacePatch{Replacement: vnode}.Patch(parent, node)
 
@@ -78,7 +93,7 @@ func (app *App[Model]) Run(ctx context.Context, node vdom.DomNode) {
 			}
 		case <-animationFrame.ch:
 			animationFrame.requested = false
-			vnode = model.View(msgEvent)
+			vnode = model.View(ms)
 			patch := oldVNode.Diff(vnode)
 			node = patch.Patch(parent, node)
 			oldVNode = vnode
