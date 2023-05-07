@@ -16,7 +16,7 @@ import (
 	"context"
 	"syscall/js"
 
-	"zenhack.net/go/vdom"
+	"zenhack.net/go/tea/vdom"
 )
 
 // A Message[Model] is a message carrying updates to make to a Model.

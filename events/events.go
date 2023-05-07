@@ -1,6 +1,6 @@
 package events
 
-import "zenhack.net/go/vdom"
+import "zenhack.net/go/tea/vdom"
 
 func handler(f func(vdom.Event) any) vdom.EventHandler {
 	return &f

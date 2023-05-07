@@ -1,18 +1,20 @@
 [![GoDoc][godoc-img]][godoc]
 
-This repository contains a simple Go library for working with Virtual
-DOMs, as popularized by [React.JS][1]. When compiled to WASM it supports
-patching the DOM via the `syscall/js` package.
+This contains a Go library for writing client-side web interfaces, in
+the model-view-update style of the [Elm][elm] architecture ("TEA").
 
-The `./tea` package contains a higher-level interface for building
-model-view-update apps, inspired by [Elm][2].
+It contains a simple package `vdom` for working with Virtual DOMs, as
+popularized by [React.JS][react]. When compiled to WASM, package `vdom`
+supports patching the DOM via the `syscall/js` package. `vdom` can be
+used stand-alone.
 
 This library is experimental, but I am currently using it in
-[Tempest][3].
+[Tempest][tempest].
 
-[1]: https://react.dev/
-[2]: https://elm-lang.org/
-[3]: https://github.com/zenhack/tempest
+There are some example applications in the `examples/` directory.
 
 [godoc]: https://pkg.go.dev/zenhack.net/go/vdom
 [godoc-img]: https://pkg.go.dev/badge/zenhack.net/go/vdom
+[elm]: https://elm-lang.org/
+[react]: https://react.dev/
+[tempest]: https://github.com/zenhack/tempest

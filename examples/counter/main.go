@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"syscall/js"
 
-	"zenhack.net/go/vdom"
-	"zenhack.net/go/vdom/builder"
-	"zenhack.net/go/vdom/tea"
+	"zenhack.net/go/tea"
+	"zenhack.net/go/tea/vdom"
+	"zenhack.net/go/tea/vdom/builder"
 )
 
 type (

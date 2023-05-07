@@ -6,5 +6,6 @@
 
 set -euo pipefail
 
+cd "$(dirname $0)/vdom"
 GOOS=js GOARCH=wasm go test -c
 go run internal/testrunner/main.go

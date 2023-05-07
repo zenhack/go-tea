@@ -5,8 +5,8 @@
 //
 // ```
 // import (
-// 	"zenhack.net/go/vdom"
-//	"zenhack.net/go/vdom/builder"
+// 	"zenhack.net/go/tea/vdom"
+//	"zenhack.net/go/tea/vdom/builder"
 // )
 //
 // type (
@@ -28,7 +28,7 @@ package builder
 import (
 	"strconv"
 
-	"zenhack.net/go/vdom"
+	"zenhack.net/go/tea/vdom"
 )
 
 // An A is a map of attribute names to values.
