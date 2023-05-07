@@ -89,7 +89,7 @@ var diffCases = []DiffCase{
 		},
 	},
 	{
-		Name: "Drop excess trailing children",
+		Name: "Drop excess trailing children (1)",
 		Before: &VElem{
 			Tag:   "a",
 			Attrs: map[string]string{},
@@ -114,6 +114,37 @@ var diffCases = []DiffCase{
 				},
 				Append: []VNode{},
 				Drop:   1,
+			},
+		},
+	},
+	{
+		Name: "Drop excess trailing children (3)",
+		Before: &VElem{
+			Tag:   "a",
+			Attrs: map[string]string{},
+			Children: []VNode{
+				VText("a"),
+				VText("b"),
+				VText("c"),
+				VText("d"),
+			},
+		},
+		After: &VElem{
+			Tag:   "a",
+			Attrs: map[string]string{},
+			Children: []VNode{
+				VText("a"),
+			},
+		},
+		Patch: ModifyPatch{
+			Attrs:  AttrsPatch{Add: map[string]string{}},
+			Events: EventsPatch{Add: map[string]EventHandler{}},
+			Children: ChildPatch{
+				Common: []Patch{
+					NopPatch{},
+				},
+				Append: []VNode{},
+				Drop:   3,
 			},
 		},
 	},
