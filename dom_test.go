@@ -56,6 +56,22 @@ func TestVdomFromJS(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "Nested elements",
+			Node: &VElem{
+				Tag: "div",
+				Attrs: map[string]string{
+					"class": "someclass",
+				},
+				Children: []VNode{
+					VText("hello"),
+					&VElem{
+						Tag:   "br",
+						Attrs: map[string]string{},
+					},
+				},
+			},
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
