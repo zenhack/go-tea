@@ -39,49 +39,41 @@ func vdomFromJS(v js.Value) VNode {
 // Self tests for the vdomFromJS function.
 func TestVdomFromJS(t *testing.T) {
 	t.Parallel()
-	cases := []struct {
-		Name string
-		Node VNode
-	}{
-		{
-			Name: "Text node",
-			Node: VText("some text"),
-		},
-		{
-			Name: "Simple element",
-			Node: &VElem{
-				Tag: "a",
-				Attrs: map[string]string{
-					"href": "#",
-				},
-			},
-		},
-		{
-			Name: "Nested elements",
-			Node: &VElem{
-				Tag: "div",
-				Attrs: map[string]string{
-					"class": "someclass",
-				},
-				Children: []VNode{
-					VText("hello"),
-					&VElem{
-						Tag:   "br",
-						Attrs: map[string]string{},
-					},
-				},
-			},
-		},
-	}
-	for _, c := range cases {
+	for _, c := range diffCases {
 		t.Run(c.Name, func(t *testing.T) {
-			// Make sure rendering and then parsing the node gives the
-			// same result:
 			this := c
 			t.Parallel()
-			dom := this.Node.ToDomNode()
-			parsed := vdomFromJS(dom.Value)
-			require.Equal(t, this.Node, parsed)
+			t.Run("Before", func(t *testing.T) {
+				testVdomFromJS(t, this.Before)
+			})
+			t.Run("After", func(t *testing.T) {
+				testVdomFromJS(t, this.After)
+			})
+		})
+	}
+}
+
+func testVdomFromJS(t *testing.T, orig VNode) {
+	t.Parallel()
+	// Make sure rendering and then parsing the node gives the
+	// same result:
+	dom := orig.ToDomNode()
+	parsed := vdomFromJS(dom.Value)
+	require.Equal(t, orig, parsed)
+}
+
+func TestPatchAppliesCorrectly(t *testing.T) {
+	t.Parallel()
+	for _, c := range diffCases {
+		t.Run(c.Name, func(t *testing.T) {
+			this := c
+			t.Parallel()
+			dom := this.Before.ToDomNode()
+			parentDiv := js.Global().Get("document").Call("createElement", "div")
+			parentDiv.Call("appendChild", dom.Value)
+			newDom := this.Patch.Patch(DomNode{Value: parentDiv}, dom)
+			actualVdom := vdomFromJS(newDom.Value)
+			require.Equal(t, this.After, actualVdom)
 		})
 	}
 }
