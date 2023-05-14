@@ -13,8 +13,8 @@ This library is experimental, but I am currently using it in
 
 There are some example applications in the `examples/` directory.
 
-[godoc]: https://pkg.go.dev/zenhack.net/go/vdom
-[godoc-img]: https://pkg.go.dev/badge/zenhack.net/go/vdom
+[godoc]: https://pkg.go.dev/zenhack.net/go/tea
+[godoc-img]: https://pkg.go.dev/badge/zenhack.net/go/tea
 [elm]: https://elm-lang.org/
 [react]: https://react.dev/
 [tempest]: https://github.com/zenhack/tempest
