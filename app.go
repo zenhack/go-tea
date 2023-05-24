@@ -21,14 +21,14 @@ import (
 
 // A Message[Model] is a message carrying updates to make to a Model.
 type Message[Model any] interface {
-	// Return an updated model, and a function to be run asynchronously
-	// with the ability to send more messages.
+	// Update updates the model, and returns a function to be run
+	// asynchronously with the ability to send more messages.
 	//
 	// Update MUST NOT block, as doing so could hang the user interface.
 	// Anything that could block must instead be done in the returned
 	// callback, whose second parameter can be used to send messages
 	// for further updates.
-	Update(Model) (Model, func(context.Context, func(Message[Model])))
+	Update(*Model) func(context.Context, func(Message[Model]))
 }
 
 // An AppModel holds application state, and knows how to render itself as
@@ -115,7 +115,7 @@ func (app *App[Model]) Run(ctx context.Context, node vdom.DomNode) {
 			return
 		case msg := <-app.msgs:
 			var cmd func(context.Context, func(Message[Model]))
-			model, cmd = msg.Update(model)
+			cmd = msg.Update(&model)
 			if cmd != nil {
 				go cmd(ctx, app.SendMessage)
 			}
