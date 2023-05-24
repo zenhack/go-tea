@@ -35,8 +35,14 @@ func (m Model) View(ms tea.MessageSender[Model]) vdom.VNode {
 type Increment struct{}
 type Decrement struct{}
 
-func (msg Increment) Update(m Model) (Model, Cmd) { return m + 1, nil }
-func (msg Decrement) Update(m Model) (Model, Cmd) { return m - 1, nil }
+func (msg Increment) Update(m *Model) Cmd {
+	*m = *m + 1
+	return nil
+}
+func (msg Decrement) Update(m *Model) Cmd {
+	*m = *m - 1
+	return nil
+}
 
 func main() {
 	app := tea.NewApp[Model](0)
